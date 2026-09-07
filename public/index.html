@@ -323,6 +323,12 @@ code { background: #f1f5f9; padding: 1px 6px; border-radius: 3px; font-family: "
       <span class="modal-close" onclick="closeHistory()">×</span>
       <h2>📚 历史保存记录</h2>
       <div id="historyList" class="history-list"></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-secondary" onclick="exportRecords()">📤 导出全部记录</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 导入记录</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importRecords(this)">
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:8px">提示：记录保存在当前浏览器中。换电脑/换浏览器时，可先"导出全部记录"，再在另一台设备上"导入记录"。</div>
     </div>
   </div>
 
@@ -649,6 +655,45 @@ function deleteRecord(id) {
   saveRecords(records);
   renderHistory();
   showToast('已删除');
+}
+
+function exportRecords() {
+  const records = getRecords();
+  if (records.length === 0) { alert('暂无记录可导出'); return; }
+  const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '成绩计算历史记录_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已导出 ' + records.length + ' 条记录');
+}
+
+function importRecords(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('文件格式不正确');
+      const existing = getRecords();
+      const ids = new Set(existing.map(r => r.id));
+      let added = 0;
+      imported.forEach(r => {
+        if (r && r.id && !ids.has(r.id)) { existing.push(r); ids.add(r.id); added++; }
+      });
+      existing.sort((a, b) => b.id - a.id);
+      saveRecords(existing);
+      renderHistory();
+      showToast('导入成功，新增 ' + added + ' 条记录（重复记录已自动跳过）');
+    } catch (err) {
+      alert('导入失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 function restart() {
