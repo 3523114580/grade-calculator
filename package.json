@@ -1,0 +1,17 @@
+{
+  "name": "grade-calculator",
+  "version": "1.0.0",
+  "description": "滇西科技师范学院 - 学业成绩与综合成绩计算系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.3.0",
+    "xlsx": "^0.18.5"
+  }
+}

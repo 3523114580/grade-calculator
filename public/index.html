@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>滇西科技师范学院 - 学业成绩与综合成绩计算系统</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Microsoft YaHei", "SimHei", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: #fff; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header p { font-size: 13px; opacity: 0.9; margin-top: 6px; }
+.container { max-width: 1400px; margin: 24px auto; padding: 0 24px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+.card-title::before { content: ''; width: 4px; height: 16px; background: #3b82f6; border-radius: 2px; }
+.upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-area:hover { border-color: #3b82f6; background: #f8fafc; }
+.upload-area.dragover { border-color: #3b82f6; background: #eff6ff; }
+.upload-area p { color: #64748b; margin: 8px 0; }
+.upload-area .icon { font-size: 40px; color: #94a3b8; }
+.btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-secondary { background: #64748b; color: #fff; }
+.btn-secondary:hover { background: #475569; }
+.btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+.info-bar { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.info-item { background: #f1f5f9; padding: 8px 16px; border-radius: 6px; font-size: 13px; }
+.info-item b { color: #1e40af; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: center; }
+th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+tr:hover td { background: #f8fafc; }
+.table-wrap { max-height: 600px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 6px; }
+.table-wrap.small { max-height: 300px; }
+input[type="number"] { width: 70px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 13px; }
+input[type="number"]:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+input[type="text"] { width: 100px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
+.form-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.form-row label { font-size: 14px; white-space: nowrap; }
+.actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+.rank-1 { color: #dc2626; font-weight: 700; }
+.rank-2 { color: #ea580c; font-weight: 600; }
+.rank-3 { color: #ca8a04; font-weight: 600; }
+.tip { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+.modal.active { display: flex; }
+.modal-content { background: #fff; border-radius: 8px; padding: 24px; max-width: 90%; max-height: 90%; overflow: auto; }
+.hidden { display: none !important; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+code { background: #f1f5f9; padding: 1px 6px; border-radius: 3px; font-family: "Consolas", monospace; color: #be185d; font-weight: 600; }
+.rules-box { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.rules-toggle { background: #f8fafc; padding: 10px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; font-size: 14px; }
+.rules-toggle:hover { background: #f1f5f9; }
+.rules-content { padding: 16px; max-height: 600px; overflow-y: auto; transition: all 0.3s; }
+.rules-content.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+.rule-group { margin-bottom: 16px; }
+.rule-group:last-child { margin-bottom: 0; }
+.rule-group-title { padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.rule-table { display: flex; flex-direction: column; gap: 2px; }
+.rule-row { display: flex; justify-content: space-between; padding: 5px 12px; background: #fafafa; border-radius: 3px; font-size: 12.5px; gap: 12px; }
+.rule-row:nth-child(even) { background: #f4f4f5; }
+.rule-item { flex: 1; color: #475569; }
+.rule-val { white-space: nowrap; color: #1e293b; font-weight: 600; }
+.toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.history-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+.history-modal.active { display: flex; }
+.history-content { background: #fff; border-radius: 8px; padding: 24px; width: 90%; max-width: 800px; max-height: 85vh; overflow: auto; }
+.history-content h2 { margin-bottom: 16px; font-size: 18px; }
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.history-item-info { flex: 1; }
+.history-item-info .h-name { font-weight: 600; font-size: 15px; color: #1e40af; }
+.history-item-info .h-meta { font-size: 12px; color: #64748b; margin-top: 4px; }
+.history-item-actions { display: flex; gap: 8px; white-space: nowrap; }
+.history-empty { text-align: center; padding: 40px; color: #94a3b8; }
+.modal-close { float: right; cursor: pointer; font-size: 20px; color: #94a3b8; }
+.modal-close:hover { color: #475569; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff; padding: 12px 24px; border-radius: 6px; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: toastIn 0.3s; }
+@keyframes toastIn { from { opacity: 0; top: 0; } to { opacity: 1; top: 20px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>滇西科技师范学院 · 学业成绩与综合成绩计算系统</h1>
+  <p>基于《信息学院学生综合素质评价实施细则》自动计算学业成绩与综合考评成绩</p>
+</div>
+
+<div class="container">
+
+  <div class="toolbar">
+    <button class="btn btn-warning" onclick="showHistory()">📚 历史记录</button>
+    <button class="btn btn-danger" onclick="restart()">🚪 重新开始</button>
+  </div>
+
+  <div class="card" id="uploadCard">
+    <div class="card-title">第一步：上传班级成绩明细表</div>
+    <div class="tip">
+      <b>说明：</b>请上传教务系统导出的班级成绩明细表（.xlsx/.xls格式），系统将自动识别学号、姓名、课程名称、学分及成绩。<br>
+      <b>学业成绩</b> = Σ(科目成绩×学分) / Σ(学分)，即加权平均成绩。
+    </div>
+    <div class="upload-area" id="uploadArea">
+      <div class="icon">📊</div>
+      <p><b>点击选择文件</b> 或拖拽文件到此处</p>
+      <p>支持 .xlsx / .xls 格式</p>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+    </div>
+  </div>
+
+  <div class="card hidden" id="courseCard">
+    <div class="card-title">课程信息（已识别）</div>
+    <div class="info-bar" id="courseInfo"></div>
+  </div>
+
+  <div class="card hidden" id="scoreCard">
+    <div class="card-title">第二步：学业成绩（自动计算）</div>
+    <div class="tip">
+      <b>📐 学业成绩（加权平均）计算方法：</b><br>
+      学业成绩 = （科目1成绩 × 科目1学分 + 科目2成绩 × 科目2学分 + … + 科目N成绩 × 科目N学分）÷（科目1学分 + 科目2学分 + … + 科目N学分）<br>
+      即 <code>学业成绩 = Σ(科目成绩 × 学分) ÷ Σ(学分)</code>，只计算有成绩的科目（不及格、重修科目均计入）。<br><br>
+      <b>📐 智育-学业成绩分计算方法：</b><br>
+      根据实施细则，智育素养中学业成绩部分满分80分，因此 <code>智育学业成绩分 = 学业成绩 × 80%</code>。<br><br>
+      <b>📝 举例（以第1名学生为例）：</b>该生共修22门课、总学分53.0，若 Σ(成绩×学分)=4550.05，<br>
+      则 学业成绩 = 4550.05 ÷ 53.0 ≈ 85.85 分，智育学业成绩分 = 85.85 × 80% = 68.68 分。
+    </div>
+    <div class="table-wrap small">
+      <table id="scoreTable">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>学号</th>
+            <th>姓名</th>
+            <th>已修课程数</th>
+            <th>总学分</th>
+            <th>学业成绩<br>(加权平均)</th>
+            <th>智育-学业成绩分<br>(学业成绩×80%)</th>
+            <th>学业排名</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card hidden" id="extraCard">
+    <div class="card-title">第三步：录入其他素养分数</div>
+    <div class="tip">
+      <b>填写说明：</b>以下分数根据学生实际表现填写。基础分默认60分（体育、美育可调整），奖励分和扣分需手动录入。<br>
+      <b>德育</b>：基础分60 + 奖励分(最高40) - 扣分(最高100) &nbsp;|&nbsp;
+      <b>智育</b>：学业成绩分(自动) + 学业表现(最高20) &nbsp;|&nbsp;
+      <b>体育</b>：基础分60 + 奖励分(最高40) &nbsp;|&nbsp;
+      <b>美育</b>：基础分60 + 奖励分(最高40) &nbsp;|&nbsp;
+      <b>劳动教育</b>：基础分60 + 奖励分(最高40) - 扣分(最高100)
+    </div>
+
+    <div class="rules-box">
+      <div class="rules-toggle" onclick="toggleRules()">
+        <b>📋 各素养加分/扣分细则对照表（点击展开/收起）</b>
+        <span id="rulesArrow">▼</span>
+      </div>
+      <div id="rulesContent" class="rules-content">
+        <div class="rule-group">
+          <div class="rule-group-title" style="background:#fee2e2;color:#991b1b">德育素养 · 奖励分（累计最高40分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">义务献血</span><span class="rule-val">+4分/学年（仅一次）</span></div>
+            <div class="rule-row"><span class="rule-item">拾金不昧、见义勇为等先进事迹</span><span class="rule-val">院级+2 / 校级+4 / 县级+6 / 市级+8 / 省级+10 / 国家级+12（取最高）</span></div>
+            <div class="rule-row"><span class="rule-item">递交入团申请书 / 被接收为团员</span><span class="rule-val">+10 / +12</span></div>
+            <div class="rule-row"><span class="rule-item">递交入党申请书 / 入党积极分子</span><span class="rule-val">+12 / +12</span></div>
+            <div class="rule-row"><span class="rule-item">发展对象 / 预备党员 / 党员</span><span class="rule-val">+15 / +15 / +15</span></div>
+            <div class="rule-row"><span class="rule-item">校级大学生年度人物提名 / 校级年度人物</span><span class="rule-val">+6 / +7</span></div>
+            <div class="rule-row"><span class="rule-item">省级自强之星等 / 国家级</span><span class="rule-val">+9 / +10</span></div>
+            <div class="rule-row"><span class="rule-item">学生干部：干事 / 副部长 / 部长 / 主要负责人</span><span class="rule-val">+5 / +10 / +12 / +15（可累积，不超过20）</span></div>
+            <div class="rule-row"><span class="rule-item">优秀学生干部等 / 校级三好等 / 市级 / 省级</span><span class="rule-val">+5 / +10 / +15 / +20（不超过30）</span></div>
+            <div class="rule-row"><span class="rule-item">班集体获校级 / 市级 / 省级表扬</span><span class="rule-val">班级成员各 +5 / +7 / +10</span></div>
+          </div>
+          <div class="rule-group-title" style="background:#fef3c7;color:#92400e">德育素养 · 扣分（累计最高扣100分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">院级通报批评 / 校级通报批评</span><span class="rule-val">-10 / -20</span></div>
+            <div class="rule-row"><span class="rule-item">警告、严重警告、记过、留校察看处分</span><span class="rule-val">各 -20</span></div>
+            <div class="rule-row"><span class="rule-item">迟到、早退 / 旷课</span><span class="rule-val">每次 -3 / 每次 -5</span></div>
+            <div class="rule-row"><span class="rule-item">无故不参加集体活动 / 缺交青年大学习</span><span class="rule-val">每次 -5 / 每次 -5</span></div>
+            <div class="rule-row"><span class="rule-item">夜不归宿、晚归等违纪（线上通知单为准）</span><span class="rule-val">每次 -10</span></div>
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group-title" style="background:#dbeafe;color:#1e40af">智育 · 学业表现（累计最高20分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item"><b>① 语言技能（最高6分）</b>普通话一级乙等 / 二甲 / 二乙</span><span class="rule-val">+6 / +3 / +2</span></div>
+            <div class="rule-row"><span class="rule-item">英语 A级 / B级 / 四级 / 六级</span><span class="rule-val">+2 / +1 / +4 / +6</span></div>
+            <div class="rule-row"><span class="rule-item"><b>② 计算机技能（最高3分）</b>省级 / 国家一级 / 二级 / 三级 / 四级</span><span class="rule-val">+0.5 / +1 / +2 / +2.5 / +3</span></div>
+            <div class="rule-row"><span class="rule-item"><b>③ 职业技能（最高2分）</b>无等级证 / 初级 / 中级 / 高级</span><span class="rule-val">+1 / +1 / +1.5 / +2（驾驶证等+1）</span></div>
+            <div class="rule-row"><span class="rule-item"><b>④ 学科竞赛/创新（最高9分）</b>二级学院/社团级：优秀奖/三等/二等/一等</span><span class="rule-val">+1.5 / +2 / +2.5 / +3</span></div>
+            <div class="rule-row"><span class="rule-item">校级：优秀奖/三等/二等/一等</span><span class="rule-val">+3 / +3.5 / +4 / +4.5</span></div>
+            <div class="rule-row"><span class="rule-item">地厅级：优秀奖/三等/二等/一等</span><span class="rule-val">+4.5 / +5 / +5.5 / +6</span></div>
+            <div class="rule-row"><span class="rule-item">省部级：优秀奖/三等/二等/一等</span><span class="rule-val">+6 / +6.5 / +7 / +7.5</span></div>
+            <div class="rule-row"><span class="rule-item">国家级：优秀奖/三等/二等/一等</span><span class="rule-val">+7.5 / +8 / +8.5 / +9</span></div>
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group-title" style="background:#dcfce7;color:#166534">体育素养 · 奖励分（累计最高40分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">体育参与：班级/学院/学校体育活动 / 代表学院参加校运动会</span><span class="rule-val">每次 +5 / 每人 +10</span></div>
+            <div class="rule-row"><span class="rule-item">体质健康测试平均分 ≥ 90分</span><span class="rule-val">+10</span></div>
+            <div class="rule-row"><span class="rule-item">参军入伍退役复学</span><span class="rule-val">+5</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（二级学院/社团级）：优秀奖/三等/二等/一等</span><span class="rule-val">+0.5 / +1 / +2 / +3</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（校级）：优秀奖/三等/二等/一等</span><span class="rule-val">+3 / +4 / +5 / +6</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（地厅级）：优秀奖/三等/二等/一等</span><span class="rule-val">+6 / +7 / +8 / +9</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（省部级）：优秀奖/三等/二等/一等</span><span class="rule-val">+9 / +10 / +11 / +12</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（国家级）：优秀奖/三等/二等/一等</span><span class="rule-val">+12 / +13 / +14 / +15</span></div>
+            <div class="rule-row"><span class="rule-item">校级运动会破纪录</span><span class="rule-val">+10</span></div>
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group-title" style="background:#f3e8ff;color:#6b21a8">美育素养 · 奖励分（累计最高40分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">艺术体验：学院/学校文化艺术展演、校园文化活动</span><span class="rule-val">每次 +10</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（二级学院/社团级）：优秀奖/三等/二等/一等</span><span class="rule-val">+1 / +2 / +4 / +6</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（校级）：优秀奖/三等/二等/一等</span><span class="rule-val">+6 / +8 / +10 / +12</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（地厅级）：优秀奖/三等/二等/一等</span><span class="rule-val">+12 / +14 / +16 / +18</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（省部级）：优秀奖/三等/二等/一等</span><span class="rule-val">+18 / +20 / +22 / +24</span></div>
+            <div class="rule-row"><span class="rule-item">竞赛（国家级）：优秀奖/三等/二等/一等</span><span class="rule-val">+24 / +26 / +28 / +30</span></div>
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group-title" style="background:#ffedd5;color:#9a3412">劳动教育 · 奖励分（累计最高40分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">宿舍卫生清洁、校园劳动等日常生活劳动</span><span class="rule-val">+3</span></div>
+            <div class="rule-row"><span class="rule-item">"三下乡"、"返家乡"等社会实践/志愿服务</span><span class="rule-val">每次 +10（主要负责人 +12）</span></div>
+            <div class="rule-row"><span class="rule-item">以上获院级/校级/县级/市级/省级/国家级通报表扬</span><span class="rule-val">+12 / +14 / +16 / +18 / +20 / +25</span></div>
+            <div class="rule-row"><span class="rule-item">群团活动（社区、福利院等公益志愿服务）</span><span class="rule-val">每次 +5（主要负责人 +7）</span></div>
+            <div class="rule-row"><span class="rule-item">被评为文明宿舍，宿舍成员</span><span class="rule-val">各 +5</span></div>
+          </div>
+          <div class="rule-group-title" style="background:#fef3c7;color:#92400e">劳动教育 · 扣分（累计最高扣100分）</div>
+          <div class="rule-table">
+            <div class="rule-row"><span class="rule-item">不参与学院、学校组织的各项劳动</span><span class="rule-val">每次 -10</span></div>
+            <div class="rule-row"><span class="rule-item">宿舍脏乱差，卫生月考核不合格或被学校通报</span><span class="rule-val">宿舍成员每次 -10</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-bottom:12px">
+      <label>班级名称：</label>
+      <input type="text" id="className" value="25级数据科学与大数据技术(专升本)四班">
+      <button class="btn btn-secondary" onclick="fillAllDefaults()">一键填充默认值</button>
+    </div>
+    <div class="table-wrap">
+      <table id="extraTable">
+        <thead>
+          <tr>
+            <th rowspan="2">序号</th>
+            <th rowspan="2">学号</th>
+            <th rowspan="2">姓名</th>
+            <th colspan="3">德育素养(20%)</th>
+            <th>智育(50%)</th>
+            <th colspan="2">体育素养(10%)</th>
+            <th colspan="2">美育素养(10%)</th>
+            <th colspan="3">劳动教育(10%)</th>
+          </tr>
+          <tr>
+            <th>基础分</th><th>奖励分</th><th>扣分</th>
+            <th>学业表现</th>
+            <th>基础分</th><th>奖励分</th>
+            <th>基础分</th><th>奖励分</th>
+            <th>基础分</th><th>奖励分</th><th>扣分</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="calculate()">计算综合成绩</button>
+      <button class="btn btn-warning" onclick="saveRecord()">💾 保存记录</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <div class="card-title">计算结果</div>
+    <div class="actions" style="margin-top:0;margin-bottom:16px">
+      <button class="btn btn-success" onclick="exportResult()">导出Excel（附件1+附件4）</button>
+      <button class="btn btn-warning" onclick="saveRecord()">💾 保存记录</button>
+      <button class="btn btn-secondary" onclick="window.print()">打印预览</button>
+    </div>
+
+    <h3 style="font-size:15px;margin:16px 0 10px;color:#1e40af">📌 综合考评成绩排名</h3>
+    <div class="table-wrap">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>综合排名</th>
+            <th>学号</th>
+            <th>姓名</th>
+            <th>德育F1<br>(20%)</th>
+            <th>智育F2<br>(50%)</th>
+            <th>体育F3<br>(10%)</th>
+            <th>美育F4<br>(10%)</th>
+            <th>劳育F5<br>(10%)</th>
+            <th>综合成绩</th>
+            <th>学业成绩</th>
+            <th>学业排名</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="history-modal" id="historyModal">
+    <div class="history-content">
+      <span class="modal-close" onclick="closeHistory()">×</span>
+      <h2>📚 历史保存记录</h2>
+      <div id="historyList" class="history-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let parsedData = null;
+let results = null;
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  uploadArea.innerHTML = '<p>⏳ 正在解析文件...</p>';
+  fetch('/api/upload', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { alert(data.error); resetUpload(); return; }
+      parsedData = data;
+      showParsedData();
+    })
+    .catch(err => { alert('上传失败：' + err.message); resetUpload(); });
+}
+
+function resetUpload() {
+  uploadArea.innerHTML = '<div class="icon">📊</div><p><b>点击选择文件</b> 或拖拽文件到此处</p><p>支持 .xlsx / .xls 格式</p>';
+}
+
+function showParsedData() {
+  document.getElementById('uploadCard').classList.add('hidden');
+
+  const info = document.getElementById('courseInfo');
+  const firstSem = parsedData.courses.filter(c => !/第2学期/.test(c.name) && !/形势与政策二|马克思主义|Web设计|大数据分析|大数据应用/.test(c.name));
+  info.innerHTML = `
+    <div class="info-item">课程总数：<b>${parsedData.courses.length} 门</b></div>
+    <div class="info-item">学生人数：<b>${parsedData.students.length} 人</b></div>
+    <div class="info-item">总学分：<b>${parsedData.courses.reduce((s,c)=>s+c.credit,0).toFixed(1)}</b></div>
+  `;
+  document.getElementById('courseCard').classList.remove('hidden');
+
+  const sortedByScore = [...parsedData.students].sort((a, b) => b.academicScore - a.academicScore);
+  const scoreRank = {};
+  sortedByScore.forEach((s, i) => { scoreRank[s.studentId] = i + 1; });
+
+  const top = sortedByScore[0];
+  const sumScoreCredit = (top.academicScore * top.totalCredit).toFixed(2);
+  const tipEl = document.querySelector('#scoreCard .tip');
+  tipEl.innerHTML = `
+    <b>📐 学业成绩（加权平均）计算方法：</b><br>
+    学业成绩 = （科目1成绩 × 科目1学分 + 科目2成绩 × 科目2学分 + … + 科目N成绩 × 科目N学分）÷（科目1学分 + 科目2学分 + … + 科目N学分）<br>
+    即 <code>学业成绩 = Σ(科目成绩 × 学分) ÷ Σ(学分)</code>，只计算有成绩的科目（不及格、重修科目均计入）。<br><br>
+    <b>📐 智育-学业成绩分计算方法：</b><br>
+    根据实施细则，智育素养中学业成绩部分满分80分，因此 <code>智育学业成绩分 = 学业成绩 × 80%</code>。<br><br>
+    <b>📝 举例（以学业第1名 ${top.name} 为例）：</b>该生共修 ${top.courseCount} 门课、总学分 ${top.totalCredit.toFixed(1)}，Σ(成绩×学分)=${sumScoreCredit}，<br>
+    则 学业成绩 = ${sumScoreCredit} ÷ ${top.totalCredit.toFixed(1)} ≈ <b style="color:#1e40af">${top.academicScore}</b> 分，智育学业成绩分 = ${top.academicScore} × 80% = <b style="color:#1e40af">${top.intellectualAcademicPart}</b> 分。
+  `;
+
+  const scoreTbody = document.querySelector('#scoreTable tbody');
+  scoreTbody.innerHTML = '';
+  parsedData.students.forEach(s => {
+    const rank = scoreRank[s.studentId];
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.index}</td>
+      <td>${s.studentId}</td>
+      <td>${s.name}</td>
+      <td>${s.courseCount}</td>
+      <td>${s.totalCredit.toFixed(1)}</td>
+      <td><b style="color:#1e40af">${s.academicScore}</b></td>
+      <td>${s.intellectualAcademicPart}</td>
+      <td class="${rankClass}">${rank}</td>
+    `;
+    scoreTbody.appendChild(tr);
+  });
+  document.getElementById('scoreCard').classList.remove('hidden');
+
+  const extraTbody = document.querySelector('#extraTable tbody');
+  extraTbody.innerHTML = '';
+  parsedData.students.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.dataset.studentId = s.studentId;
+    tr.innerHTML = `
+      <td>${s.index}</td>
+      <td>${s.studentId}</td>
+      <td>${s.name}</td>
+      <td><input type="number" value="60" readonly style="background:#f1f5f9;width:55px"></td>
+      <td><input type="number" class="ex-moralReward" value="0" min="0" max="40"></td>
+      <td><input type="number" class="ex-moralDeduct" value="0" min="0" max="100"></td>
+      <td><input type="number" class="ex-academicPerformance" value="0" min="0" max="20"></td>
+      <td><input type="number" class="ex-sportsBase" value="60" min="0" max="60"></td>
+      <td><input type="number" class="ex-sportsReward" value="0" min="0" max="40"></td>
+      <td><input type="number" class="ex-aestheticBase" value="60" min="0" max="60"></td>
+      <td><input type="number" class="ex-aestheticReward" value="0" min="0" max="40"></td>
+      <td><input type="number" value="60" readonly style="background:#f1f5f9;width:55px"></td>
+      <td><input type="number" class="ex-laborReward" value="0" min="0" max="40"></td>
+      <td><input type="number" class="ex-laborDeduct" value="0" min="0" max="100"></td>
+    `;
+    extraTbody.appendChild(tr);
+  });
+  document.getElementById('extraCard').classList.remove('hidden');
+}
+
+function toggleRules() {
+  const content = document.getElementById('rulesContent');
+  const arrow = document.getElementById('rulesArrow');
+  content.classList.toggle('collapsed');
+  arrow.textContent = content.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+function fillAllDefaults() {
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr => {
+    tr.querySelector('.ex-moralReward').value = 0;
+    tr.querySelector('.ex-moralDeduct').value = 0;
+    tr.querySelector('.ex-academicPerformance').value = 0;
+    tr.querySelector('.ex-sportsBase').value = 60;
+    tr.querySelector('.ex-sportsReward').value = 0;
+    tr.querySelector('.ex-aestheticBase').value = 60;
+    tr.querySelector('.ex-aestheticReward').value = 0;
+    tr.querySelector('.ex-laborReward').value = 0;
+    tr.querySelector('.ex-laborDeduct').value = 0;
+  });
+}
+
+function collectExtras() {
+  const extras = {};
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr => {
+    const sid = tr.dataset.studentId;
+    extras[sid] = {
+      moralReward: parseFloat(tr.querySelector('.ex-moralReward').value) || 0,
+      moralDeduct: parseFloat(tr.querySelector('.ex-moralDeduct').value) || 0,
+      academicPerformance: parseFloat(tr.querySelector('.ex-academicPerformance').value) || 0,
+      sportsBase: parseFloat(tr.querySelector('.ex-sportsBase').value),
+      sportsReward: parseFloat(tr.querySelector('.ex-sportsReward').value) || 0,
+      aestheticBase: parseFloat(tr.querySelector('.ex-aestheticBase').value),
+      aestheticReward: parseFloat(tr.querySelector('.ex-aestheticReward').value) || 0,
+      laborReward: parseFloat(tr.querySelector('.ex-laborReward').value) || 0,
+      laborDeduct: parseFloat(tr.querySelector('.ex-laborDeduct').value) || 0
+    };
+  });
+  return extras;
+}
+
+function calculate() {
+  const extras = collectExtras();
+  fetch('/api/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ students: parsedData.students, extras })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { alert(data.error); return; }
+    results = data.results;
+    results.forEach(r => r.extras = extras[r.studentId]);
+    renderResults();
+    document.getElementById('resultCard').classList.remove('hidden');
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  })
+  .catch(err => alert('计算失败：' + err.message));
+}
+
+function renderResults() {
+  const tbody = document.querySelector('#resultTable tbody');
+  tbody.innerHTML = '';
+  results.forEach((r, i) => {
+    const rankClass = r.comprehensiveRank === 1 ? 'rank-1' : r.comprehensiveRank === 2 ? 'rank-2' : r.comprehensiveRank === 3 ? 'rank-3' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="${rankClass}">${r.comprehensiveRank}</td>
+      <td>${r.studentId}</td>
+      <td>${r.name}</td>
+      <td>${r.F1}</td>
+      <td>${r.F2}</td>
+      <td>${r.F3}</td>
+      <td>${r.F4}</td>
+      <td>${r.F5}</td>
+      <td><b style="color:#dc2626;font-size:15px">${r.comprehensive}</b></td>
+      <td>${r.academicScore}</td>
+      <td>${r.academicRank}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportResult() {
+  const className = document.getElementById('className').value;
+  fetch('/api/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ results, className })
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '综合素质评价结果.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+  })
+  .catch(err => alert('导出失败：' + err.message));
+}
+
+const STORAGE_KEY = 'gradeCalcRecords';
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function saveRecords(records) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function showToast(msg, isError) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = isError ? '#ef4444' : '#10b981';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function saveRecord() {
+  if (!parsedData) { alert('请先上传成绩文件！'); return; }
+  const className = document.getElementById('className').value;
+  const extras = collectExtras();
+  const records = getRecords();
+  const record = {
+    id: Date.now(),
+    name: className,
+    savedAt: new Date().toLocaleString('zh-CN'),
+    parsedData: JSON.parse(JSON.stringify(parsedData)),
+    extras: extras,
+    className: className,
+    results: results ? JSON.parse(JSON.stringify(results)) : null
+  };
+  records.unshift(record);
+  saveRecords(records);
+  showToast('保存成功！共 ' + records.length + ' 条记录');
+}
+
+function showHistory() {
+  renderHistory();
+  document.getElementById('historyModal').classList.add('active');
+}
+
+function closeHistory() {
+  document.getElementById('historyModal').classList.remove('active');
+}
+
+function renderHistory() {
+  const records = getRecords();
+  const list = document.getElementById('historyList');
+  if (records.length === 0) {
+    list.innerHTML = '<div class="history-empty">暂无保存记录，计算后点击"保存记录"即可留存。</div>';
+    return;
+  }
+  list.innerHTML = records.map(r => `
+    <div class="history-item">
+      <div class="history-item-info">
+        <div class="h-name">${r.name}</div>
+        <div class="h-meta">保存时间：${r.savedAt} | 学生数：${r.parsedData.students.length}人 | ${r.results ? '已计算综合成绩' : '仅保存学业成绩'}</div>
+      </div>
+      <div class="history-item-actions">
+        <button class="btn btn-primary" onclick="loadRecord(${r.id})">加载并继续编辑</button>
+        <button class="btn btn-danger" onclick="deleteRecord(${r.id})">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadRecord(id) {
+  const records = getRecords();
+  const record = records.find(r => r.id === id);
+  if (!record) { alert('记录不存在或已删除'); return; }
+  parsedData = record.parsedData;
+  document.getElementById('className').value = record.className;
+  showParsedData();
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr => {
+    const sid = tr.dataset.studentId;
+    const ex = record.extras[sid];
+    if (ex) {
+      tr.querySelector('.ex-moralReward').value = ex.moralReward ?? 0;
+      tr.querySelector('.ex-moralDeduct').value = ex.moralDeduct ?? 0;
+      tr.querySelector('.ex-academicPerformance').value = ex.academicPerformance ?? 0;
+      tr.querySelector('.ex-sportsBase').value = ex.sportsBase ?? 60;
+      tr.querySelector('.ex-sportsReward').value = ex.sportsReward ?? 0;
+      tr.querySelector('.ex-aestheticBase').value = ex.aestheticBase ?? 60;
+      tr.querySelector('.ex-aestheticReward').value = ex.aestheticReward ?? 0;
+      tr.querySelector('.ex-laborReward').value = ex.laborReward ?? 0;
+      tr.querySelector('.ex-laborDeduct').value = ex.laborDeduct ?? 0;
+    }
+  });
+  if (record.results) {
+    results = record.results;
+    renderResults();
+    document.getElementById('resultCard').classList.remove('hidden');
+  } else {
+    document.getElementById('resultCard').classList.add('hidden');
+    results = null;
+  }
+  closeHistory();
+  document.getElementById('extraCard').scrollIntoView({ behavior: 'smooth' });
+  showToast('记录已加载，可继续编辑修改');
+}
+
+function deleteRecord(id) {
+  if (!confirm('确定要删除这条记录吗？删除后无法恢复。')) return;
+  const records = getRecords().filter(r => r.id !== id);
+  saveRecords(records);
+  renderHistory();
+  showToast('已删除');
+}
+
+function restart() {
+  if (!confirm('确定要重新开始吗？当前未保存的数据将丢失。\n（建议先点击"保存记录"留存）')) return;
+  parsedData = null;
+  results = null;
+  document.getElementById('uploadCard').classList.remove('hidden');
+  document.getElementById('courseCard').classList.add('hidden');
+  document.getElementById('scoreCard').classList.add('hidden');
+  document.getElementById('extraCard').classList.add('hidden');
+  document.getElementById('resultCard').classList.add('hidden');
+  document.querySelector('#scoreTable tbody').innerHTML = '';
+  document.querySelector('#extraTable tbody').innerHTML = '';
+  document.querySelector('#resultTable tbody').innerHTML = '';
+  resetUpload();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('已重置，可上传新的班级成绩文件');
+}
+</script>
+
+</body>
+</html>

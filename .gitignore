@@ -1,0 +1,13 @@
+node_modules/
+*.log
+.DS_Store
+.env
+
+# 原始成绩文件和PDF（不传到线上）
+*.xlsx
+*.xls
+*.pdf
+read_files*.js
+read_pdf.js
+test_calc.js
+output*.txt
