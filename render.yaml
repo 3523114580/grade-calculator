@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: grade-calculator
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    env:
+      NODE_ENV: production
